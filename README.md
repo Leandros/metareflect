@@ -17,7 +17,7 @@ serialization from and to a byte stream for annotated classes.
 
 # Getting Started
 
-**To get started [download the latest release here](/releases).**
+**To get started [download the latest release here](https://github.com/Leandros/metareflect/releases).**
 
 ## Setting Up The Runtime
 
@@ -85,7 +85,7 @@ To generate a compilation database using CMake, pass it
 
 # Contributing
 
-Any contribution is welcome. Take a look at the [open tickets](/issues) to get
+Any contribution is welcome. Take a look at the [open tickets](https://github.com/Leandros/metareflect/issues) to get
 started with the development of metareflect.
 
 ## Requirements
