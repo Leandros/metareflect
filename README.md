@@ -39,13 +39,13 @@ Every class which you want to be reflected needs to be annotated.
     CLASS() Point
     {
     public:
-        PROPERTY(Serialized, Width=)
+        PROPERTY()
         int x;
 
-        PROPERTY(Serialized)
+        PROPERTY()
         int y;
 
-        PROPERTY(Serialized)
+        PROPERTY()
         int z;
 
         FUNCTION()

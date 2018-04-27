@@ -66,7 +66,6 @@ public:
         m_name = _strdup(name);
     }
 
-    template<class Serializer>
     FUNCTION()
     bool Serialize(Serializer &serializer) noexcept
     {
