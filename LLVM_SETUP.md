@@ -6,33 +6,38 @@ steps to get LLVM up and running to develop metareflect.
 # Requirements
 
 - Around 20 GB of free disk space
-- A beefy computer (or some time)
+- A powerful computer (or some time)
 
 # Cloning LLVM
 
 1. Clone LLVM
 
-    git clone https://git.llvm.org/git/llvm.git/ llvm
+```
+git clone https://git.llvm.org/git/llvm.git/ llvm
+```
 
 2. Clone Clang
-
-    cd llvm/tools
-    git clone https://git.llvm.org/git/clang.git/ clang
+```
+cd llvm/tools
+git clone https://git.llvm.org/git/clang.git/ clang
+```
 
 3. Clone Clang-Extra-Tools
-
-    cd clang/tools
-    git clone http://llvm.org/git/clang-tools-extra extra
+```
+cd clang/tools
+git clone http://llvm.org/git/clang-tools-extra extra
+```
 
 3. Clone Metareflect
-
-    cd extra
-    git clone https://github.com/Leandros/metareflect.git metareflect
+```
+cd extra
+git clone https://github.com/Leandros/metareflect.git metareflect
+```
 
 4. Add Metareflect to CMakeLists.txt (assuming a posix shell)
-
-    echo "add_subdirectory(metareflect/metareflect)" >> CMakeLists.txt
-
+```
+echo "add_subdirectory(metareflect/metareflect)" >> CMakeLists.txt
+```
 
 # Building LLVM
 
@@ -41,11 +46,12 @@ The steps are similar for *nix-like operating systems, simply switch out
 the Visual Studio CMake generator with `ninja`.
 
 1. Generating CMake Build
-
-    cd path/to/llvm/root
-    mkdir build
-    cd build
-    cmake .. -G"Visual Studio 2017 Win64"
+```
+cd path/to/llvm/root
+mkdir build
+cd build
+cmake .. -G"Visual Studio 2017 Win64"
+```
 
 2. Open the resulting Visual Studio project
 
