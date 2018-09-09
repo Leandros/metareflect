@@ -20,28 +20,15 @@ struct FunctionStorage;
 /* ========================================================================= */
 /* Hash                                                                      */
 /* ========================================================================= */
-namespace detail
-{
+static constexpr uint64_t kFNV1aValue = 0xcbf29ce484222325;
+static constexpr uint64_t kFNV1aPrime = 0x100000001b3;
 
-/* TODO(arvid): Replace with CityHash64. */
-inline size_t
-HashInternal(void const *buffer, size_t size) noexcept
+inline constexpr uint64_t
+Hash(char const * const str, uint64_t const value = kFNV1aValue) noexcept
 {
-    static constexpr uint64_t OffsetBasis = 14695981039346656037ull;
-    static constexpr uint64_t Prime = 1099511628211ull;
-    char const *data = (char const *)buffer;
-    size_t hash = OffsetBasis;
-    for (size_t i = 0; i < size; ++i)
-        hash = (hash ^ data[i]) * Prime;
-    return hash;
-}
-
-} /* namespace detail */
-
-inline size_t
-Hash(char const *str) noexcept
-{
-    return detail::HashInternal(str, strlen(str));
+    return (str[0] == '\0') 
+        ? value 
+        : Hash(&str[1], (value ^ uint64_t(str[0])) * kFNV1aPrime);
 }
 
 
@@ -224,10 +211,8 @@ class Field : public Primitive
     friend struct detail::FunctionStorage;
 
 public:
-    enum {
-        kFlagsNull = 0x0,
-        kFlagsSerialized = 0x1,
-    };
+    static constexpr unsigned kFlagsNull       = 0x0;
+    static constexpr unsigned kFlagsSerialized = 0x1;
 
     Field() noexcept = default;
 
@@ -278,6 +263,11 @@ public:
         return m_qualifier;
     }
 
+    char const *
+    Name() const noexcept
+    {
+        return m_name;
+    }
 
 private:
     metareflect::Type *m_type;
@@ -285,6 +275,7 @@ private:
     unsigned m_serializedWidth;
     unsigned m_offset;
     metareflect::Qualifier m_qualifier;
+    char const *m_name;
 };
 
 
@@ -327,9 +318,9 @@ class Function : public Primitive
     friend struct detail::FunctionStorage;
 
 public:
-    enum {
-        kFlagsNull = 0x0,
-    };
+    static constexpr unsigned kFlagsNull       = 0x0;
+    static constexpr unsigned kFlagsMember     = 0x1;
+    static constexpr unsigned kFlagsReplicated = 0x2;
 
     Function() noexcept = default;
 
@@ -368,12 +359,18 @@ public:
         return m_flags;
     }
 
+    char const *
+    Name() const noexcept
+    {
+        return m_name;
+    }
 
 private:
     FunctionReturn const *m_returnType;
     FunctionParameter const *m_parameters;
     FunctionParameter const *m_parametersEnd;
     unsigned m_flags;
+    char const *m_name;
 };
 
 

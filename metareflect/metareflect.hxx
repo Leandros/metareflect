@@ -7,6 +7,7 @@
 
 #include <stdint.h>
 #include <string.h>
+#include <stddef.h>
 
 namespace metareflect
 {
@@ -87,6 +88,15 @@ BeforeSerialize(T *_this) noexcept
 {
     if constexpr (HasBeforeSerialize<T>::value)
         return _this->BeforeSerialize();
+    return true;
+}
+
+template<class T, class Serializer>
+constexpr bool
+CustomSerialize(T *_this) noexcept
+{
+    if constexpr (HasCustomSerialize<T>::value)
+        return _this->Serialize();
     return true;
 }
 

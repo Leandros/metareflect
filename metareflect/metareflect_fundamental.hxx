@@ -24,9 +24,9 @@ GetType<bool>() noexcept
 
 template<>
 Type const *
-GetType<signed char>() noexcept
+GetType<char>() noexcept
 {
-    static Type type{sizeof(signed char), Hash("signed char")};
+    static Type type{sizeof(char), Hash("char")};
     return &type;
 }
 
@@ -40,9 +40,9 @@ GetType<unsigned char>() noexcept
 
 template<>
 Type const *
-GetType<signed short>() noexcept
+GetType<short>() noexcept
 {
-    static Type type{sizeof(signed short), Hash("signed short")};
+    static Type type{sizeof(short), Hash("short")};
     return &type;
 }
 
@@ -56,9 +56,9 @@ GetType<unsigned short>() noexcept
 
 template<>
 Type const *
-GetType<signed int>() noexcept
+GetType<int>() noexcept
 {
-    static Type type{sizeof(signed int), Hash("signed int")};
+    static Type type{sizeof(int), Hash("int")};
     return &type;
 }
 
@@ -72,9 +72,9 @@ GetType<unsigned int>() noexcept
 
 template<>
 Type const *
-GetType<signed long>() noexcept
+GetType<long>() noexcept
 {
-    static Type type{sizeof(signed long), Hash("signed long")};
+    static Type type{sizeof(long), Hash("long")};
     return &type;
 }
 
@@ -88,9 +88,9 @@ GetType<unsigned long>() noexcept
 
 template<>
 Type const *
-GetType<signed long long>() noexcept
+GetType<long long>() noexcept
 {
-    static Type type{sizeof(signed long long), Hash("signed long long")};
+    static Type type{sizeof(long long), Hash("long long")};
     return &type;
 }
 
