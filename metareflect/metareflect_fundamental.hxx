@@ -10,7 +10,15 @@ template<>
 Type const *
 GetType<void>() noexcept
 {
-    static Type type{0, Hash("void")};
+    struct Void : public Type {
+        using Type::Type;
+        virtual void
+        Print(void const *instance, FILE *file = stdout) const noexcept
+        {
+            fprintf(file, "void{%p}", instance);
+        }
+    };
+    static Void type{ 0, Hash("void"), "void" };
     return &type;
 }
 
@@ -18,7 +26,15 @@ template<>
 Type const *
 GetType<bool>() noexcept
 {
-    static Type type{sizeof(bool), Hash("bool")};
+    struct Bool : public Type {
+        using Type::Type;
+        virtual void
+        Print(void const *instance, FILE *file = stdout) const noexcept
+        {
+            fprintf(file, "bool{%d}", *(bool const *)instance);
+        }
+    };
+    static Bool type{ sizeof(bool), Hash("bool"), "bool", };
     return &type;
 }
 
@@ -26,7 +42,15 @@ template<>
 Type const *
 GetType<char>() noexcept
 {
-    static Type type{sizeof(char), Hash("char")};
+    struct Char : public Type {
+        using Type::Type;
+        virtual void
+        Print(void const *instance, FILE *file = stdout) const noexcept
+        {
+            fprintf(file, "char{%d}", *(char const *)instance);
+        }
+    };
+    static Char type{ sizeof(char), Hash("char"), "char", };
     return &type;
 }
 
@@ -34,7 +58,19 @@ template<>
 Type const *
 GetType<unsigned char>() noexcept
 {
-    static Type type{sizeof(unsigned char), Hash("unsigned char")};
+    struct UChar : public Type {
+        using Type::Type;
+        virtual void
+        Print(void const *instance, FILE *file = stdout) const noexcept
+        {
+            fprintf(file, "unsigned char{%u}", *(unsigned char const *)instance);
+        }
+    };
+    static UChar type{
+        sizeof(unsigned char),
+        Hash("unsigned char"),
+        "unsigned char",
+    };
     return &type;
 }
 
@@ -42,7 +78,15 @@ template<>
 Type const *
 GetType<short>() noexcept
 {
-    static Type type{sizeof(short), Hash("short")};
+    struct Short : public Type {
+        using Type::Type;
+        virtual void
+        Print(void const *instance, FILE *file = stdout) const noexcept
+        {
+            fprintf(file, "short{%d}", *(short const *)instance);
+        }
+    };
+    static Short type{ sizeof(short), Hash("short"), "short", };
     return &type;
 }
 
@@ -50,7 +94,19 @@ template<>
 Type const *
 GetType<unsigned short>() noexcept
 {
-    static Type type{sizeof(unsigned short), Hash("unsigned short")};
+    struct UShort : public Type {
+        using Type::Type;
+        virtual void
+        Print(void const *instance, FILE *file = stdout) const noexcept
+        {
+            fprintf(file, "unsigned short{%u}", *(unsigned short const *)instance);
+        }
+    };
+    static UShort type{
+        sizeof(unsigned short),
+        Hash("unsigned short"),
+        "unsigned short",
+    };
     return &type;
 }
 
@@ -58,7 +114,15 @@ template<>
 Type const *
 GetType<int>() noexcept
 {
-    static Type type{sizeof(int), Hash("int")};
+    struct Int : public Type {
+        using Type::Type;
+        virtual void
+        Print(void const *instance, FILE *file = stdout) const noexcept
+        {
+            fprintf(file, "int{%d}", *(int const *)instance);
+        }
+    };
+    static Int type{ sizeof(int), Hash("int"), "int", };
     return &type;
 }
 
@@ -66,7 +130,19 @@ template<>
 Type const *
 GetType<unsigned int>() noexcept
 {
-    static Type type{sizeof(unsigned int), Hash("unsigned int")};
+    struct UInt : public Type {
+        using Type::Type;
+        virtual void
+        Print(void const *instance, FILE *file = stdout) const noexcept
+        {
+            fprintf(file, "unsigned int{%u}", *(unsigned int const *)instance);
+        }
+    };
+    static UInt type{
+        sizeof(unsigned int),
+        Hash("unsigned int"),
+        "unsigned int",
+    };
     return &type;
 }
 
@@ -74,7 +150,15 @@ template<>
 Type const *
 GetType<long>() noexcept
 {
-    static Type type{sizeof(long), Hash("long")};
+    struct Long : public Type {
+        using Type::Type;
+        virtual void
+        Print(void const *instance, FILE *file = stdout) const noexcept
+        {
+            fprintf(file, "long{%ld}", *(long const *)instance);
+        }
+    };
+    static Long type{ sizeof(long), Hash("long"), "long", };
     return &type;
 }
 
@@ -82,7 +166,19 @@ template<>
 Type const *
 GetType<unsigned long>() noexcept
 {
-    static Type type{sizeof(unsigned long), Hash("unsigned long")};
+    struct ULong : public Type {
+        using Type::Type;
+        virtual void
+        Print(void const *instance, FILE *file = stdout) const noexcept
+        {
+            fprintf(file, "unsigned long{%lu}", *(unsigned long const *)instance);
+        }
+    };
+    static ULong type{
+        sizeof(unsigned long),
+        Hash("unsigned long"),
+        "unsigned long",
+    };
     return &type;
 }
 
@@ -90,7 +186,15 @@ template<>
 Type const *
 GetType<long long>() noexcept
 {
-    static Type type{sizeof(long long), Hash("long long")};
+    struct LongLong : public Type {
+        using Type::Type;
+        virtual void
+        Print(void const *instance, FILE *file = stdout) const noexcept
+        {
+            fprintf(file, "long long{%lld}", *(long long const *)instance);
+        }
+    };
+    static LongLong type{ sizeof(long long), Hash("long long"), "long long", };
     return &type;
 }
 
@@ -98,7 +202,19 @@ template<>
 Type const *
 GetType<unsigned long long>() noexcept
 {
-    static Type type{sizeof(unsigned long long), Hash("unsigned long long")};
+    struct ULongLong : public Type {
+        using Type::Type;
+        virtual void
+        Print(void const *instance, FILE *file = stdout) const noexcept
+        {
+            fprintf(file, "unsigned long long{%llu}", *(unsigned long long const *)instance);
+        }
+    };
+    static ULongLong type{
+        sizeof(unsigned long long),
+        Hash("unsigned long long"),
+        "unsigned long long",
+    };
     return &type;
 }
 
@@ -106,7 +222,15 @@ template<>
 Type const *
 GetType<float>() noexcept
 {
-    static Type type{sizeof(float), Hash("float")};
+    struct Float : public Type {
+        using Type::Type;
+        virtual void
+        Print(void const *instance, FILE *file = stdout) const noexcept
+        {
+            fprintf(file, "float{%.9g}", *(float const *)instance);
+        }
+    };
+    static Float type{ sizeof(float), Hash("float"), "float", };
     return &type;
 }
 
@@ -114,7 +238,15 @@ template<>
 Type const *
 GetType<double>() noexcept
 {
-    static Type type{sizeof(double), Hash("double")};
+    struct Double : public Type {
+        using Type::Type;
+        virtual void
+        Print(void const *instance, FILE *file = stdout) const noexcept
+        {
+            fprintf(file, "double{%.17g}", *(double const *)instance);
+        }
+    };
+    static Double type{ sizeof(double), Hash("double"), "double", };
     return &type;
 }
 
@@ -122,7 +254,15 @@ template<>
 Type const *
 GetType<long double>() noexcept
 {
-    static Type type{sizeof(long double), Hash("long double")};
+    struct LongDouble : public Type {
+        using Type::Type;
+        virtual void
+        Print(void const *instance, FILE *file = stdout) const noexcept
+        {
+            fprintf(file, "long double{%.21Lg}", *(long double const *)instance);
+        }
+    };
+    static LongDouble type{ sizeof(long double), Hash("long double"), "long double", };
     return &type;
 }
 

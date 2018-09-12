@@ -63,8 +63,14 @@ GenerateQualifier(ASTContext *ctx, QualType type)
     int isArray = t->isArrayType();
     int arrayLen = 0;
     if (isArray) {
-        /* TODO Implement! */
-        /* clang::ArrayType const *arr = t->getAsArrayTypeUnsafe(); */
+        /* TODO: How to handle non-constant arrays? */
+        clang::ArrayType const *arr = t->getAsArrayTypeUnsafe();
+        if (arr->isConstantSizeType()) {
+            assert(arr != nullptr && "arr is null");
+            auto carr = (clang::ConstantArrayType const *)arr;
+            auto size = carr->getSize();
+            arrayLen = *size.getRawData();
+        }
     }
 
     SmallString<32> out;
@@ -77,5 +83,49 @@ GenerateQualifier(ASTContext *ctx, QualType type)
        << isArray << ", "
        << arrayLen << ")";
     return out;
+}
+
+SmallString<8>
+PrintfFormatForType(ASTContext *ctx, QualType t)
+{
+    QualType desugared = GetDesugaredType(ctx, t);
+    clang::Type const *type = desugared.getTypePtrOrNull();
+    if (type == nullptr) {
+        printf("TODO: TYPE IS NULLPTR\n");
+        return SmallString<8>("");
+    }
+
+    bool isFundamental = type->isFundamentalType();
+    printf("isFundamental: %d\n", isFundamental);
+    if (isFundamental) {
+        clang::BuiltinType const *builtin = type->getAs<BuiltinType>();
+        switch (builtin->getKind()) {
+        case BuiltinType::Kind::Bool:
+        case BuiltinType::Kind::SChar:
+        case BuiltinType::Kind::Short:
+        case BuiltinType::Kind::Int:
+            return SmallString<8>("%d");
+        case BuiltinType::Kind::UChar:
+        case BuiltinType::Kind::UShort:
+        case BuiltinType::Kind::UInt:
+            return SmallString<8>("%u");
+        case BuiltinType::Kind::Long:
+            return SmallString<8>("%ld");
+        case BuiltinType::Kind::ULong:
+            return SmallString<8>("%lu");
+        case BuiltinType::Kind::LongLong:
+            return SmallString<8>("%lld");
+        case BuiltinType::Kind::ULongLong:
+            return SmallString<8>("%llu");
+        case BuiltinType::Kind::Float:
+        case BuiltinType::Kind::Double:
+        case BuiltinType::Kind::LongDouble:
+            return SmallString<8>("%f");
+        default:
+            break;
+        }
+    }
+
+    return SmallString<8>("");
 }
 

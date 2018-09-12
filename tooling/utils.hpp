@@ -57,5 +57,8 @@ GetRealTypeName(ASTContext *ctx, QualType t, raw_ostream &os)
 SmallString<32>
 GenerateQualifier(ASTContext *ctx, QualType type);
 
+SmallString<8>
+PrintfFormatForType(ASTContext *ctx, QualType t);
+
 #endif /* METAREFLECT_UTILS_HPP */
 

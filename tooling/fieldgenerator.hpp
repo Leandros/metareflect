@@ -61,9 +61,10 @@ struct FieldGenerator
         unsigned serializedWidth = annotations.width;
 
         os << "\n/* Field " << (i + 1) << " */\n";
-        os << "static Type type" << i <<
-            "(sizeof(" << typeName << "), Hash(\"" << typeName << "\"));\n";
-        prefix() << ".m_type = &type" << i << ";\n";
+        if (type != typeName)
+            prefix() << ".m_type = GetType<" << typeName << ">();\n";
+        else
+            prefix() << ".m_type = nullptr;\n";
         prefix() << ".m_flags = " << annotations.Flags() << ";\n";
         if (isSerializable && serializedWidth > 0)
             prefix() << ".m_serializedWidth = " << serializedWidth << ";\n";

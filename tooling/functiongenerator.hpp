@@ -51,6 +51,7 @@ struct FunctionGenerator
         prefix() << ".m_parametersEnd = &functionParameters" << i << "[" << func->getNumParams() << "];\n";
         prefix() << ".m_flags = " << annotations.Flags() << ";\n";
         prefix() << ".m_name = \"" << funcName << "\";\n";
+        /* prefix() << ".m_pointer = */
     }
 
     void
@@ -71,11 +72,8 @@ struct FunctionGenerator
         else
             retOstream << "sizeof(" << typeName << ")";
 
-        os << "static Type functionRetType" << i
-            << "(" << retSize << ","
-            << " Hash(\"" << typeName << "\"));\n";
         os << "static FunctionReturn functionRet" << i << ";\n";
-        os << "functionRet" << i << ".m_type = &functionRetType" << i << ";\n";
+        os << "functionRet" << i << ".m_type = GetType<" << typeName << ">();\n";
         os << "functionRet" << i << ".m_flags = 0/*TODO*/;\n";
         os << "functionRet" << i << ".m_serializedWidth = " << retSize << " * 8;\n";
         os << "functionRet" << i << ".m_qualifier = "
@@ -107,10 +105,7 @@ struct FunctionGenerator
                 return os << "functionParameters" << index << "[" << i << "]";
             };
 
-            os << "static Type functionParameterType" << index << i
-                << "(sizeof(" << typeName << "),"
-                << " Hash(\"" << typeName << "\"));\n";
-            prefix() << ".m_type = &functionParameterType" << index << i << ";\n";
+            prefix() << ".m_type = GetType<" << typeName << ">();\n";
             prefix() << ".m_flags = 0/*TODO*/;\n";
             prefix() << ".m_serializedWidth = sizeof(" << typeName << ") * 8;\n";
             prefix() << ".m_qualifier = " << GenerateQualifier(ctx, param->getOriginalType()) << ";\n";

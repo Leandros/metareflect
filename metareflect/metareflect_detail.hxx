@@ -5,17 +5,26 @@
 #define METAREFLECT_DETAIL_HXX
 #pragma once
 
+#include <stdio.h>
+#include <stdint.h>
+#include <assert.h>
+#include "metareflect.hxx"
+
+namespace metareflect
+{
+
 /* Forward declare storages, for friend declarations. */
 namespace detail
 {
 
-template<size_t NFields, size_t NFunctions>
+template<class Type, size_t NFields, size_t NFunctions>
 struct ClassStorage;
 
 template<size_t NParameter>
 struct FunctionStorage;
 
 } /* namespace detail */
+
 
 /* ========================================================================= */
 /* Hash                                                                      */
@@ -114,7 +123,7 @@ struct Qualifier {
         unsigned char pointer = 0,
         unsigned char array = 0,
         unsigned count = 0) noexcept
-        : arrayCount(count)
+        : arrayLength(count)
         , cvQualifier(cv)
         , refQualifier(ref)
         , storageClass(storage)
@@ -122,7 +131,7 @@ struct Qualifier {
         , isArray(array)
     {}
 
-    unsigned arrayCount;
+    unsigned arrayLength;
     unsigned char cvQualifier : 3;
     unsigned char refQualifier : 3;
     unsigned char storageClass : 3;
@@ -132,19 +141,12 @@ struct Qualifier {
 
 
 /* ===-------------------------------------------------------------------=== */
-/* Primitive Types                                                           */
-/* ===-------------------------------------------------------------------=== */
-/* Everything derives from primitive. */
-class Primitive {};
-
-
-/* ===-------------------------------------------------------------------=== */
 /* Type                                                                      */
 /* ===-------------------------------------------------------------------=== */
 /* All types inherit from 'Type' */
-class Type : public Primitive
+class Type
 {
-    template<size_t N, size_t J>
+    template<class Type, size_t N, size_t J>
     friend struct detail::ClassStorage;
     template<size_t N>
     friend struct detail::FunctionStorage;
@@ -155,11 +157,19 @@ public:
         , m_hash(0)
     {}
 
-    Type(int size, uint64_t hash) noexcept
+    Type(
+        int size,
+        uint64_t hash,
+        char const *name) noexcept
         : m_size(size)
         , m_hash(hash)
+        , m_name(name)
     {}
 
+    /* --------------------------------------------------------------------- */
+    /* Identifier                                                            */
+    /* --------------------------------------------------------------------- */
+    virtual bool IsClass() const noexcept { return false; };
 
     /* --------------------------------------------------------------------- */
     /* Access                                                                */
@@ -174,6 +184,18 @@ public:
     Hash() const noexcept
     {
         return m_hash;
+    }
+
+    char const *
+    Name() const noexcept
+    {
+        return m_name;
+    }
+
+    virtual void
+    Print(void const *instance, FILE *file = stdout) const noexcept
+    {
+        fprintf(file, "%s{%p}", m_name, instance);
     }
 
 
@@ -196,6 +218,7 @@ public:
 private:
     uint64_t m_size;
     uint64_t m_hash;
+    char const *m_name;
 };
 
 
@@ -203,12 +226,13 @@ private:
 /* Field                                                                     */
 /* ===-------------------------------------------------------------------=== */
 /* All fields of classes are represented via this class. */
-class Field : public Primitive
+class Field
 {
-    template<size_t N, size_t J>
+    template<class Type, size_t N, size_t J>
     friend struct detail::ClassStorage;
     template<size_t N>
     friend struct detail::FunctionStorage;
+    friend class Class;
 
 public:
     static constexpr unsigned kFlagsNull       = 0x0;
@@ -217,7 +241,7 @@ public:
     Field() noexcept = default;
 
     Field(
-        Type *type,
+        Type const *type,
         unsigned flags,
         unsigned width,
         unsigned offset,
@@ -229,9 +253,8 @@ public:
         , m_qualifier(qualifier)
     {}
 
-
     /* --------------------------------------------------------------------- */
-    /* Access                                                                */
+    /* Properties                                                            */
     /* --------------------------------------------------------------------- */
     metareflect::Type const *
     Type() const noexcept
@@ -269,8 +292,53 @@ public:
         return m_name;
     }
 
+
+    /* --------------------------------------------------------------------- */
+    /* Access                                                                */
+    /* --------------------------------------------------------------------- */
+    template<class T>
+    void
+    SetValue(void *instance, T const &value) const noexcept
+    {
+        assert(*GetType<T>() == *m_type && "type mismatch");
+        memcpy(((char *)instance + m_offset), &value, sizeof(T));
+    }
+
+    template<class T>
+    T
+    GetAs(void const *instance) const noexcept
+    {
+        assert(*GetType<T>() == *m_type && "type mismatch");
+        T ret;
+        memcpy(&ret, ((char *)instance + m_offset), sizeof(T));
+        return ret;
+    }
+
+    template<class T>
+    T const *
+    GetPointer(void const *instance) const noexcept
+    {
+        assert(*GetType<T>() == *m_type && "type mismatch");
+        return static_cast<T const *>((char *)instance + m_offset);
+    }
+
+    template<class T>
+    T *
+    GetPointer(void *instance) const noexcept
+    {
+        assert(*GetType<T>() == *m_type && "type mismatch");
+        return static_cast<T *>((char *)instance + m_offset);
+    }
+
+    void const *
+    GetVoidPointer(void const *instance) const noexcept
+    {
+        return static_cast<void const *>((char *)instance + m_offset);
+    }
+
+
 private:
-    metareflect::Type *m_type;
+    metareflect::Type const *m_type;
     unsigned m_flags;
     unsigned m_serializedWidth;
     unsigned m_offset;
@@ -285,7 +353,7 @@ private:
 /* ----- Function Parameter ------ */
 class FunctionParameter : public Field
 {
-    template<size_t N, size_t J>
+    template<class Type, size_t N, size_t J>
     friend struct detail::ClassStorage;
     template<size_t N>
     friend struct detail::FunctionStorage;
@@ -298,7 +366,7 @@ public:
 /* ----- Function Return ------ */
 class FunctionReturn : public Field
 {
-    template<size_t N, size_t J>
+    template<class Type, size_t N, size_t J>
     friend struct detail::ClassStorage;
     template<size_t N>
     friend struct detail::FunctionStorage;
@@ -310,9 +378,9 @@ public:
 
 
 /* ====== Function ====== */
-class Function : public Primitive
+class Function
 {
-    template<size_t N, size_t J>
+    template<class Type, size_t N, size_t J>
     friend struct detail::ClassStorage;
     template<size_t N>
     friend struct detail::FunctionStorage;
@@ -336,9 +404,8 @@ public:
         , m_flags(flags)
     {}
 
-
     /* --------------------------------------------------------------------- */
-    /* Access                                                                */
+    /* Properties                                                            */
     /* --------------------------------------------------------------------- */
     FunctionReturn const *
     ReturnType() const noexcept
@@ -364,6 +431,7 @@ public:
     {
         return m_name;
     }
+
 
 private:
     FunctionReturn const *m_returnType;
@@ -408,14 +476,117 @@ public:
         Field *fieldsEnd,
         /* TODO(arvid): Replace with parameter of range. */
         Function *functions,
-        Function *functionsEnd) noexcept
-        : Type(size, hash)
+        Function *functionsEnd,
+        char const *name) noexcept
+        : Type(size, hash, name)
         , m_baseClass(baseClass)
         , m_fields(fields)
         , m_fieldsEnd(fieldsEnd)
         , m_functions(functions)
         , m_functionsEnd(functionsEnd)
-    {}
+        , m_name(name)
+    {
+        /* Any nullptr type is refering to ourself. */
+        for (Field *field = fields; field != fieldsEnd; ++field)
+            if (field->m_type == nullptr)
+                field->m_type = this;
+    }
+
+    /* --------------------------------------------------------------------- */
+    /* Identifier                                                            */
+    /* --------------------------------------------------------------------- */
+    virtual bool IsClass() const noexcept override { return true; };
+
+    /* --------------------------------------------------------------------- */
+    /* Identifier                                                            */
+    /* --------------------------------------------------------------------- */
+    enum class VisitType : unsigned {
+        ClassBegin,
+        ClassEnd,
+        ClassMember,
+        ArrayBegin,
+        ArrayEnd,
+        ArrayElement,
+    };
+
+    using Visitor = void(
+            void const *instance,
+            Field const *Field,
+            unsigned depth,
+            VisitType type);
+
+    void
+    VisitField(
+        void const *ptr,
+        Field const *field,
+        Visitor *visitor,
+        unsigned depth) const noexcept
+    {
+        Type const *type = field->Type();
+        if (ptr == nullptr)
+            return;
+
+        /* Recurse deeper if the field is a class. */
+        if (type->IsClass()) {
+            visitor(ptr, field, depth, VisitType::ClassBegin);
+
+            Class const *c = (Class const *)type;
+            /* Resolve pointers directly. */
+            if (field->Qualifier().isPointer) {
+                void const *p = *(void const **)ptr;
+                c->Visit(p, visitor, depth + 1);
+            } else {
+                c->Visit(ptr, visitor, depth + 1);
+            }
+
+            visitor(ptr, field, depth, VisitType::ClassEnd);
+        }
+
+        /* Just visit the field if it's a primitive. */
+        else {
+            visitor(ptr, field, depth, VisitType::ClassMember);
+        }
+    }
+
+    void
+    VisitArray(
+        void const *ptr,
+        Field const *field,
+        Visitor *visitor,
+        unsigned depth) const noexcept
+    {
+        auto &qualifier = field->Qualifier();
+        visitor(ptr, field, depth, VisitType::ArrayBegin);
+
+        char const *p = (char const *)ptr;
+        for (int i = 0, n = qualifier.arrayLength; i < n; ++i) {
+            VisitField(p, field, visitor, depth + 1);
+            p += field->Type()->Size();
+        }
+
+        visitor(ptr, field, depth, VisitType::ArrayEnd);
+    }
+
+    void
+    Visit(
+        void const *instance,
+        Visitor *visitor,
+        unsigned depth = 1) const noexcept
+    {
+        if (instance == nullptr)
+            return;
+
+        for (auto &field : Fields()) {
+            void const *ptr = field.GetVoidPointer(instance);
+            auto &qualifier = field.Qualifier();
+
+            if (qualifier.isArray) {
+                VisitArray(ptr, &field, visitor, depth);
+            } else {
+                VisitField(ptr, &field, visitor, depth);
+            }
+        }
+    }
 
 
     /* --------------------------------------------------------------------- */
@@ -440,6 +611,33 @@ public:
         return ForEach<Function>{m_functions, m_functionsEnd};
     }
 
+    char const *
+    Name() const noexcept
+    {
+        return m_name;
+    }
+
+    Field const *
+    FieldByName(char const *name) const noexcept
+    {
+        for (auto &field : Fields()) {
+            if (strcmp(name, field.Name()) == 0)
+                return &field;
+        }
+
+        return nullptr;
+    }
+
+    Function const *
+    FunctionByName(char const *name) const noexcept
+    {
+        for (auto &func : Functions()) {
+            if (strcmp(name, func.Name()) == 0)
+                return &func;
+        }
+
+        return nullptr;
+    }
 
 private:
     Class *m_baseClass;
@@ -447,6 +645,7 @@ private:
     Field *m_fieldsEnd;
     Function *m_functions;
     Function *m_functionsEnd;
+    char const *m_name;
 };
 
 
@@ -456,32 +655,21 @@ private:
 namespace detail
 {
 
-template<size_t NFields, size_t NFunctions>
+template<class Type, size_t NFields, size_t NFunctions>
 struct ClassStorage
 {
-    static_assert(NFields > 0 || NFunctions > 0 ,
-        "may not reflect empty classes");
     ClassStorage() noexcept;
-    size_t numFields = NFields;
-    size_t numFunctions = NFunctions;
+    size_t const numFields = NFields;
+    size_t const numFunctions = NFunctions;
     /* Arrays of size 0 are UB. */
-    Field fields[NFields > 0 ? NFields : 1];
+    Field fields[NFields + 1];
     /* Arrays of size 0 are UB. */
-    Function functions[NFunctions > 0 ? NFunctions : 1];
-};
-
-template<size_t NParameter>
-struct FunctionStorage
-{
-    static_assert(NParameter > 0, "Void is a parameter, too!");
-
-    FunctionStorage() noexcept;
-    size_t numParameter = NParameter;
-    Field returnValue;
-    Field parameter[NParameter];
+    Function functions[NFunctions + 1];
 };
 
 } /* namespace detail */
+
+} /* namespace metareflect */
 
 #endif /* METAREFLECT_DETAIL_HXX */
 

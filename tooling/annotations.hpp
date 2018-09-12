@@ -19,6 +19,7 @@ struct PropertyAnnotations
     {}
 
     bool serialized : 1;
+    bool nullTerminated : 1;
     unsigned width : 8;
 
     bool

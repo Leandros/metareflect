@@ -84,8 +84,8 @@ ReflectedClass::Generate(ASTContext *ctx, raw_ostream &os)
     os << "\n";
     os << "template<>\n"
         << "detail::ClassStorage<"
-            << m_fields.size()
-            << ", "
+            << type << ", "
+            << m_fields.size() << ", "
             << m_functions.size() << ">"
         << "::ClassStorage() noexcept\n";
     os << "{\n";
@@ -108,8 +108,8 @@ ReflectedClass::Generate(ASTContext *ctx, raw_ostream &os)
        << "GetClass<" << type << ">() noexcept\n"
        << "{\n"
           << "static detail::ClassStorage<"
-            << m_fields.size()
-            << ", "
+            << type << ", "
+            << m_fields.size() << ", "
             << m_functions.size() << ">"
             << " reflected;\n"
           << "static Class cache(\n"
@@ -119,7 +119,9 @@ ReflectedClass::Generate(ASTContext *ctx, raw_ostream &os)
             << "reflected.fields,\n"
             << "reflected.fields + reflected.numFields,\n"
             << "reflected.functions,\n"
-            << "reflected.functions + reflected.numFunctions);\n"
+            << "reflected.functions + reflected.numFunctions,\n"
+            << "\"" << type << "\""
+            << ");\n"
           << "return &cache;\n";
     os << "}\n\n";
 
@@ -147,13 +149,10 @@ ReflectedClass::GenerateFieldAttributes(StringRef const &attr)
     PropertyAnnotations ret;
     auto setAttributes = [&ret](StringRef const &s) -> bool
     {
-        printf("field: '%s'\n", s.str().c_str());
         if (s.equals_lower("serialized")) {
-            printf("MATCH SERIALIZED\n");
             return (ret.serialized = true);
 
         } else if (s.startswith_lower("width")) {
-            printf("MATCH WIDTH\n");
             size_t idx = s.find_first_of('=');
             auto sref = s.substr(idx + 1);
             unsigned width;
@@ -162,7 +161,6 @@ ReflectedClass::GenerateFieldAttributes(StringRef const &attr)
             return true;
         }
 
-        printf("no match\n");
         return false;
     };
 
@@ -179,13 +177,10 @@ ReflectedClass::GenerateFunctionAttributes(StringRef const &attr)
     FunctionAnnotations ret;
     auto setAttributes = [&ret](StringRef const &s) -> bool
     {
-        printf("func: %s\n", s.str().c_str());
         if (s.equals_lower("replicated")) {
-            printf("MATCH replicated\n");
             return (ret.replicated = true);
         }
 
-        printf("no match\n");
         return false;
     };
 

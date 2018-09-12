@@ -17,11 +17,13 @@ namespace metareflect
 /* ========================================================================= */
 #ifdef __METAREFLECT__
     #define CLASS(...) class __attribute__((annotate("reflect-class;" #__VA_ARGS__)))
+    #define UNION(...) union __attribute__((annotate("reflect-class;" #__VA_ARGS__)))
     #define PROPERTY(...) __attribute__((annotate("reflect-property;" #__VA_ARGS__)))
     #define FUNCTION(...) __attribute__((annotate("reflect-function;" #__VA_ARGS__)))
     #define META_OBJECT
 #else /* else __METAREFLECT__ */
     #define CLASS(...) class
+    #define UNION(...) union
     #define PROPERTY(...)
     #define FUNCTION(...)
     #define META_OBJECT \
@@ -100,12 +102,12 @@ CustomSerialize(T *_this) noexcept
     return true;
 }
 
+} /* namespace metareflect */
+
+#endif /* METAREFLECT_HXX */
+
 
 /* ========================================================================= */
 /* Detail                                                                    */
 /* ========================================================================= */
 #include "metareflect_detail.hxx"
-
-} /* namespace metareflect */
-
-#endif /* METAREFLECT_HXX */
