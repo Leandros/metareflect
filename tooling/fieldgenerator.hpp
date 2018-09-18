@@ -62,6 +62,7 @@ struct FieldGenerator
 
         os << "\n/* Field " << (i + 1) << " */\n";
         if (type != typeName)
+            /* prefix() << ".m_type = TypeResolver<" << typeName << ">::Get();\n"; */
             prefix() << ".m_type = GetType<" << typeName << ">();\n";
         else
             prefix() << ".m_type = nullptr;\n";

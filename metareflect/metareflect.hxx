@@ -27,10 +27,14 @@ namespace metareflect
     #define PROPERTY(...)
     #define FUNCTION(...)
     #define META_OBJECT \
+        friend struct PrimitiveResolver; \
+        static constexpr bool IsReflected = true; \
         template<class T> \
         friend constexpr bool AfterSerialize(T *) noexcept; \
         template<class T> \
-        friend constexpr bool BeforeSerialize(T *) noexcept;
+        friend constexpr bool BeforeSerialize(T *) noexcept; \
+        template<class T> \
+        friend metareflect::Class const *metareflect::detail::GetClassImpl(metareflect::ClassTag<T>) noexcept;
 #endif /* __METAREFLECT__ */
 
 
@@ -49,20 +53,28 @@ struct HasAfterSerialize;
 template<class T>
 struct HasCustomSerialize;
 
+template<class T>
+struct HasCustomDump;
+
 
 /* ========================================================================= */
 /* Public API                                                                */
 /* ========================================================================= */
 class Class;
 class Type;
-
 template<class T>
-Type const *
-GetType() noexcept;
+struct TypeTag {};
+template<class T>
+struct ClassTag {};
+
 
 template<class T>
 Class const *
 GetClass() noexcept;
+
+template<class T>
+Type const *
+GetType() noexcept;
 
 
 /* ========================================================================= */
@@ -111,3 +123,4 @@ CustomSerialize(T *_this) noexcept
 /* Detail                                                                    */
 /* ========================================================================= */
 #include "metareflect_detail.hxx"
+

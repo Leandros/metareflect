@@ -20,11 +20,16 @@ struct FunctionGenerator
     raw_svector_ostream funcNameOs{funcName};
     raw_svector_ostream TypeNameOs{typeName};
     StringRef const type;
+    StringRef const fieldPrefix;
 
     explicit
-    FunctionGenerator(ASTContext *context, StringRef const &parentType)
+    FunctionGenerator(
+        ASTContext *context,
+        StringRef const &parentType,
+        StringRef const &prefix)
         : ctx(context)
         , type(parentType)
+        , fieldPrefix(prefix)
     {}
 
     void
@@ -44,7 +49,7 @@ struct FunctionGenerator
             annotations.memberFunc = true;
 
         auto prefix = [&]() -> raw_ostream & {
-            return os << "functions[" << i << "]";
+            return os << fieldPrefix << "[" << i << "]";
         };
         prefix() << ".m_returnType = &functionRet" << i << ";\n";
         prefix() << ".m_parameters = &functionParameters" << i << "[0];\n";
@@ -73,6 +78,7 @@ struct FunctionGenerator
             retOstream << "sizeof(" << typeName << ")";
 
         os << "static FunctionReturn functionRet" << i << ";\n";
+        /* os << "functionRet" << i << ".m_type = TypeResolver<" << typeName << ">::Get();\n"; */
         os << "functionRet" << i << ".m_type = GetType<" << typeName << ">();\n";
         os << "functionRet" << i << ".m_flags = 0/*TODO*/;\n";
         os << "functionRet" << i << ".m_serializedWidth = " << retSize << " * 8;\n";
@@ -105,6 +111,7 @@ struct FunctionGenerator
                 return os << "functionParameters" << index << "[" << i << "]";
             };
 
+            /* prefix() << ".m_type = TypeResolver<" << typeName << ">::Get();\n"; */
             prefix() << ".m_type = GetType<" << typeName << ">();\n";
             prefix() << ".m_flags = 0/*TODO*/;\n";
             prefix() << ".m_serializedWidth = sizeof(" << typeName << ") * 8;\n";

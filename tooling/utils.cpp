@@ -24,11 +24,22 @@ struct TypeVisitor : public RecursiveASTVisitor<TypeVisitor>
 QualType
 GetDesugaredType(ASTContext *ctx, QualType t)
 {
-    TypeVisitor v{ ctx };
-    v.TraverseType(t);
-    clang::Type const *type = v.m_leaf->getUnqualifiedDesugaredType();
-    QualType retType(type, 0);
-    return retType;
+    auto type = t.split().Ty;
+
+    clang::BuiltinType const *builtin = type->getAs<clang::BuiltinType>();
+    if (builtin) {
+        return QualType(builtin, 0);
+    }
+
+    clang::RecordType const *record = type->getAs<clang::RecordType>();
+    if (record) {
+        return QualType(record, 0);
+    }
+
+    /* Fallback to traversing the type manually. */
+    TypeVisitor visitor(ctx);
+    visitor.TraverseType(t);
+    return QualType(visitor.m_leaf, 0);
 }
 
 SmallString<32>

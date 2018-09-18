@@ -53,65 +53,72 @@ ReflectedClass::Generate(ASTContext *ctx, raw_ostream &os)
     }
 
     /* Mark class as serializable if one or more fields are serialized. */
-    bool isSerializable = std::any_of(
+    ClassAnnotations classFlags;
+    classFlags.isSerializable = std::any_of(
         propertyAnnotations.begin(),
         propertyAnnotations.end(),
         [](PropertyAnnotations &v) { return v.serialized; });
+    classFlags.hasBeforeSerialize = HasFunctionOfName("BeforeSerialize");
+    classFlags.hasAfterSerialize = HasFunctionOfName("AfterSerialize");
+    classFlags.hasCustomSerialize = HasFunctionOfName("Serialize");
+    classFlags.hasCustomDump = HasFunctionOfName("Dump");
     os << "template<> struct IsSerializable<"
         << type
         << "> { static constexpr bool value = "
-        << (isSerializable ? "true" : "false")
+        << (classFlags.isSerializable ? "true" : "false")
         << "; };\n";
 
     os << "template<> struct HasBeforeSerialize<"
         << type
         << "> { static constexpr bool value = "
-        << (HasFunctionOfName("BeforeSerialize") ? "true" : "false")
+        << (classFlags.hasBeforeSerialize ? "true" : "false")
         << "; };\n";
 
     os << "template<> struct HasAfterSerialize<"
         << type
         << "> { static constexpr bool value = "
-        << (HasFunctionOfName("AfterSerialize") ? "true" : "false")
+        << (classFlags.hasAfterSerialize ? "true" : "false")
         << "; };\n";
 
     os << "template<> struct HasCustomSerialize<"
         << type
         << "> { static constexpr bool value = "
-        << (HasFunctionOfName("Serialize") ? "true" : "false")
+        << (classFlags.hasCustomSerialize ? "true" : "false")
         << "; };\n";
 
-    os << "\n";
-    os << "template<>\n"
-        << "detail::ClassStorage<"
-            << type << ", "
-            << m_fields.size() << ", "
-            << m_functions.size() << ">"
-        << "::ClassStorage() noexcept\n";
-    os << "{\n";
+    os << "template<> struct HasCustomDump<"
+        << type
+        << "> { static constexpr bool value = "
+        << (classFlags.hasCustomDump ? "true" : "false")
+        << "; };\n";
 
-    /* Fields */
-    FieldGenerator fieldGenerator(ctx, type, "fields");
-    for (unsigned i = 0, n = m_fields.size(); i < n; ++i)
-        fieldGenerator.Generate(i, m_fields[i], propertyAnnotations[i], os);
-
-    /* Functions */
-    FunctionGenerator funcGenerator(ctx, type);
-    for (unsigned i = 0, n = m_functions.size(); i < n; ++i)
-        funcGenerator.Generate(i, m_functions[i], functionAnnotations[i], os);
-
-    os << "}\n\n";
+    os << "namespace detail\n{\n";
 
     /* GetClass function */
+    /* os << "template<> struct ClassResolver<" << type << ">;\n"; */
     os << "template<>\n"
        << "Class const *\n"
-       << "GetClass<" << type << ">() noexcept\n"
+       /* << "ClassResolver<" << type << ">::Get() noexcept\n" */
+       /* << "GetClass<" << type << ">() noexcept\n" */
+       << "GetClassImpl(ClassTag<" << type << ">) noexcept\n"
        << "{\n"
           << "static detail::ClassStorage<"
             << type << ", "
             << m_fields.size() << ", "
             << m_functions.size() << ">"
-            << " reflected;\n"
+            << " reflected([](auto self) {\n";
+
+    /* Fields */
+    FieldGenerator fieldGenerator(ctx, type, "self->fields");
+    for (unsigned i = 0, n = m_fields.size(); i < n; ++i)
+        fieldGenerator.Generate(i, m_fields[i], propertyAnnotations[i], os);
+
+    /* Functions */
+    FunctionGenerator funcGenerator(ctx, type, "self->functions");
+    for (unsigned i = 0, n = m_functions.size(); i < n; ++i)
+        funcGenerator.Generate(i, m_functions[i], functionAnnotations[i], os);
+
+    os << "});\n"
           << "static Class cache(\n"
             << "sizeof(" << type << "),\n"
             << "Hash(\"" << type << "\"),\n"
@@ -120,19 +127,24 @@ ReflectedClass::Generate(ASTContext *ctx, raw_ostream &os)
             << "reflected.fields + reflected.numFields,\n"
             << "reflected.functions,\n"
             << "reflected.functions + reflected.numFunctions,\n"
-            << "\"" << type << "\""
-            << ");\n"
+            << "\"" << type << "\",\n"
+            << classFlags.Flags() << ");\n"
           << "return &cache;\n";
     os << "}\n\n";
 
     /* GetType function */
+    /* os << "template<> struct TypeResolver<" << type << ">;\n"; */
     os << "template<>\n"
        << "Type const *\n"
-       << "GetType<" << type << ">() noexcept\n"
+       /* << "TypeResolver<" << type << ">::Get() noexcept\n" */
+       /* << "GetType<" << type << ">() noexcept\n" */
+       << "GetTypeImpl(TypeTag<" << type << ">) noexcept\n"
        << "{\n"
+       /* << "return ClassResolver<" << type << ">::Get();\n" */
        << "return GetClass<" << type << ">();\n"
        << "}\n";
 
+    os << "} /* namespace detail */\n";
     os << "} /* namespace metareflect */\n\n";
 }
 
@@ -159,6 +171,9 @@ ReflectedClass::GenerateFieldAttributes(StringRef const &attr)
             sref.getAsInteger(10, width);
             ret.width = width;
             return true;
+
+        } else if (s.equals_lower("cstring")) {
+            return (ret.isCString = true);
         }
 
         return false;

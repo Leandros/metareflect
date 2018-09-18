@@ -3,11 +3,5 @@
 /* ========================================================================= */
 
 #include "metareflect.hxx"
-
-namespace metareflect
-{
-
+#define FUNDAMENTAL_IMPL
 #include "metareflect_fundamental.hxx"
-
-} /* namespace metareflect */
-

@@ -1,6 +1,8 @@
 #include <string.h>
 #include <stdlib.h>
 #include "metareflect.hxx"
+#include <string>
+#include <vector>
 
 CLASS() Point
 {
@@ -8,13 +10,13 @@ CLASS() Point
 
 public:
     PROPERTY(Serialized, Width=32)
-    signed int x;
+    signed x;
 
     PROPERTY(Serialized)
-    int y;
+    int32_t y;
 
     PROPERTY(Serialized)
-    int z;
+    size_t z;
 
     FUNCTION()
     size_t Hash() const
@@ -28,8 +30,8 @@ UNION() RGBColor
     META_OBJECT
 
 public:
-    PROPERTY()
-    int rgb;
+    PROPERTY(Serialized)
+    uint32_t rgb;
     PROPERTY()
     struct {
         unsigned char _;
@@ -49,6 +51,9 @@ public:
 
     PROPERTY(Serialized, Width=24)
     RGBColor color;
+
+    PROPERTY(Serialized, CString)
+    char const *name;
 };
 
 CLASS() Object
@@ -56,14 +61,17 @@ CLASS() Object
     META_OBJECT
 public:
 
-    PROPERTY()
+    PROPERTY(Serialized)
     Point *pPoint;
 
-    PROPERTY()
-    Point points[8];
+    PROPERTY(Serialized)
+    Point points[3];
 
     PROPERTY()
     Object *children;
+
+    PROPERTY()
+    Object *parent;
 };
 
 
@@ -97,5 +105,23 @@ public:
 
 private:
     char *m_name = nullptr;
+};
+
+template<class T>
+using vector = std::vector<T>;
+using string = std::string;
+
+
+CLASS() User
+{
+public:
+    PROPERTY(Serialized)
+    uint64_t id;
+
+    PROPERTY(Serialized)
+    string name;
+
+    PROPERTY(Serialized)
+    vector<string> pets;
 };
 
