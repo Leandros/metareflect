@@ -821,14 +821,14 @@ namespace metareflect
 {
 
 template<class T>
-Class const *
+inline Class const *
 GetClass() noexcept
 {
     return detail::GetClassImpl(ClassTag<T>{});
 }
 
 template<class T>
-Type const *
+inline Type const *
 GetType() noexcept
 {
     return detail::GetTypeImpl(TypeTag<T>{});
