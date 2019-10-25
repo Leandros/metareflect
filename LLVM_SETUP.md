@@ -36,7 +36,7 @@ git clone https://github.com/Leandros/metareflect.git metareflect
 
 4. Add Metareflect to CMakeLists.txt (assuming a posix shell)
 ```
-echo "add_subdirectory(metareflect/metareflect)" >> CMakeLists.txt
+echo "add_subdirectory(metareflect/tooling)" >> CMakeLists.txt
 ```
 
 # Building LLVM
